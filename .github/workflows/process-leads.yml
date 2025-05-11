@@ -13,7 +13,7 @@ on:
 
 jobs:
   run-python-script:
-    runs-on: [self-hosted, Linux X64, lightsail]
+    runs-on: [self-hosted, Linux, X64, lightsail]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
