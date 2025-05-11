@@ -9,10 +9,11 @@
 name: Process Leads Data and Trigger Loan API
 
 on:
-schedule:
-# Run at 6:31 PM UTC every day (12:01 AM IST)
-- cron: '31 18 * * *'
-workflow_dispatch:
+push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
 run-python-script:
