@@ -8,12 +8,12 @@
 name: Process Leads Data and Trigger Loan API
 
 on:
-    push:
-        branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
-    run-python-script:
-        runs-on: ubuntu-latest
+  run-python-script:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
