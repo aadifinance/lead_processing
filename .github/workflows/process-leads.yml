@@ -12,6 +12,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Debug:list data directory
+        run: |
+          echo "Contents of ./data:"
+          ls -R data/ | sed 's/^/  /'
+
       - name: Debug:show expected file
         run: |
             echo "Looking for: ${{ github.workspace }}/$(dirname "$FileName")"
