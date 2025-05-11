@@ -5,15 +5,12 @@
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
 # documentation.
-
 name: Process Leads Data and Trigger Loan API
 
 on:
 push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+ 
 
 jobs:
 run-python-script:
@@ -31,7 +28,6 @@ steps:
     run: |
       python -m pip install --upgrade pip
       pip install pandas requests numpy openpyxl
-
   - name: Run the Python script
     env:
       API_TOKEN: ${{ secrets.API_TOKEN }}
