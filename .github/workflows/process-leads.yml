@@ -12,6 +12,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Debug:show expected file
+        run: |
+            echo "Looking for: ${{ github.workspace }}/$(dirname "$FileName")"
+            echo "Full path: $FileName"
+            ls -lh "$(dirname "$FileName")" || echo "→ Directory not found"
+            ls -lh "$FileName" || echo "→ File not found"
+        
       - name: Run the Python script
         env:
           API_TOKEN: ${{ secrets.API_TOKEN }}
