@@ -2,7 +2,7 @@
 """
 Refactored on May 31, 2025
 Original Author: Dotpe
-Updated for batch processing with stepwise prompt statements.
+Updated for batch processing with explicit garbage collection and low memory usage.
 """
 
 import os
@@ -10,10 +10,10 @@ import pandas as pd
 import datetime
 from datetime import date, timedelta
 import requests
-import json
 import numpy as np
 import re
 import time
+import gc  # Import garbage collector
 
 # Define base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -80,31 +80,32 @@ print("Step 9: calculate_age function defined.")
 print("Step 10: Loading DND data.")
 DND = pd.read_csv(DND_FILE, dtype={'Phone': str})
 DND.columns = ['Phone', 'Flag']
+print(f"Step 11: DND data loaded with {DND.shape[0]} rows.")
 
-print("Step 11: Loading Pincode filter data.")
+print("Step 12: Loading Pincode filter data.")
 Pincode = pd.read_csv(PINCODE_FILTER_FILE)
 Pincode = Pincode[['pincode']].drop_duplicates()
 Pincode.columns = ['Pincode']
 Pincode['Flag'] = 1
+print(f"Step 13: Pincode filter data loaded with {Pincode.shape[0]} rows.")
 
 # Batch processing
-chunksize = 500
+chunksize = 100
 batch_number = 0
-print(f"Step 12: Starting batch processing with chunksize={chunksize}.")
+print(f"Step 14: Starting batch processing with chunksize={chunksize}.")
 
 for chunk in pd.read_csv(FileName, chunksize=chunksize):
     batch_number += 1
     print(f"\n--- Processing Batch {batch_number} ---")
-
     df = chunk.copy()
-    print(f"Step 13: Batch {batch_number} data loaded with {df.shape[0]} rows.")
+    print(f"Step 15: Batch {batch_number} data loaded with {df.shape[0]} rows.")
 
     if TT in [2, 3, 4, 5]:
-        print(f"Step 14: Loading state information for Batch {batch_number}.")
+        print(f"Step 16: Loading state information for Batch {batch_number}.")
         STATE = pd.read_csv(PINCODE_FILE)[['pincode', 'state_name', 'city']]
         STATE.columns = ['E10', 'city', 'state']
         df = df.merge(STATE, on='E10', how='left')
-        print("Step 15: State merge done.")
+        print("Step 17: State merge done.")
 
         df['Master User ID'] = ''
         df['User Status'] = ''
@@ -117,76 +118,69 @@ for chunk in pd.read_csv(FileName, chunksize=chunksize):
         df = df[['Master User ID', 'User Status', 'E4', 'E5', 'E2', 'E6', 'E7', 'E8', 'E3',
                  'Current Application Status', 'E11', 'E27', 'E9', 'E22', 'E23', 'E10',
                  'city', 'state', 'Lps At', 'Submitted At', 'Last Assessed At']]
-        print("Step 16: Columns aligned post state merge.")
+        print("Step 18: Columns aligned post state merge.")
+
+        del STATE
+        gc.collect()
 
     df.columns = ["Master User ID", "User Status", "First Name", "Last Name", "Phone", "Gender",
                   "Date Of Birth", "Pan", "Email ID", "Current Application Status",
                   "Monthly Income", "Employer Name", "Employment Type", "Address Line 1",
                   "Address Line 2", "Pincode", "City", "State", "Lps At", "Submitted At",
                   "Last Assessed At"]
-    print("Step 17: Columns renamed.")
+    print("Step 19: Columns renamed.")
 
     df = df[df['Email ID'].notna() & df['Monthly Income'].notna()]
     df['Monthly Income'] = df['Monthly Income'].astype(int)
-    print("Step 18: Null values filtered and Monthly Income converted.")
+    print("Step 20: Null values filtered and Monthly Income converted.")
 
-    # DND Filter
     df['Phone'] = df['Phone'].astype(str)
     df = df.merge(DND, on='Phone', how='left')
     df = df.loc[(df.Flag != 1) & (df.Flag != 0)]
     df = df[~df['Email ID'].str.contains('india', na=False)]
     df.drop('Flag', axis=1, inplace=True)
-    print("Step 19: DND filtering completed.")
+    print("Step 21: DND filtering completed.")
 
-    # Pincode Filter
     df = df.merge(Pincode, on='Pincode', how='left')
     df = df.loc[df['Flag'] == 1]
     df.drop('Flag', axis=1, inplace=True)
-    print("Step 20: Pincode filtering completed.")
+    print("Step 22: Pincode filtering completed.")
 
-    # Monthly income normalization
     df['Monthly Income'] = df['Monthly Income'].apply(lambda x: min(int(x / 12), 199000) if x >= 500000 else x)
-    print("Step 21: Monthly Income normalized.")
+    print("Step 23: Monthly Income normalized.")
 
-    # Email cleanup
     df['Email ID'] = df['Email ID'].str.lower()
     df['Email ID'] = df['Email ID'].str.replace(r'[^\w\.@]+', '', regex=True)
     df['Email ID'] = df['Email ID'].str.replace(r'gmil|gamil|gmai|gamail|gmial', 'gmail', regex=True)
-    print("Step 22: Email cleaned and standardized.")
+    print("Step 24: Email cleaned and standardized.")
 
-    # Filter by employment and income
     df = df[df['Monthly Income'] >= 20000]
     df = df[df['Employment Type'].str.lower() == 'salaried']
-    print("Step 23: Employment type and income filters applied.")
+    print("Step 25: Employment type and income filters applied.")
 
-    # Gender normalization
     df['Gender'] = df['Gender'].replace({'f': 'Female', 'm': 'Male'})
-    print("Step 24: Gender normalization applied.")
+    print("Step 26: Gender normalization applied.")
 
-    # Age filtering
     df['Date Of Birth'] = pd.to_datetime(df['Date Of Birth'], errors='coerce')
     df = df.dropna(subset=['Date Of Birth'])
     df['Age'] = df['Date Of Birth'].apply(calculate_age)
     df = df[(df['Age'] >= 21) & (df['Age'] <= 58)]
     df['Date Of Birth'] = df['Date Of Birth'].dt.strftime('%d/%m/%Y')
     df.drop('Age', axis=1, inplace=True)
-    print("Step 25: Age filtering applied.")
+    print("Step 27: Age filtering applied.")
 
-    # Assign ref_id
     df['ref_id'] = np.random.randint(100000000, 999999999, size=df.shape[0])
-    print("Step 26: ref_id assigned.")
+    print("Step 28: ref_id assigned.")
 
-    # API Fields
     df['DDStatus'] = ''
     df['DDMessage'] = ''
     df['LCStatus'] = ''
     df['LCMessage'] = ''
     df['LCReason'] = ''
-    print("Step 27: API response fields added.")
+    print("Step 29: API response fields added.")
 
     for i in range(df.shape[0]):
-        print(f"Step 28: Processing row {i} in batch {batch_number}.")
-
+        print(f"Step 30: Processing row {i} in batch {batch_number}.")
         data = {
             "mobile": str(df.iloc[i]['Phone'])[:10],
             "partner_id": "AADIFINANCE",
@@ -196,7 +190,7 @@ for chunk in pd.read_csv(FileName, chunksize=chunksize):
         try:
             response = requests.post(url, json=data, headers=headers)
             responseMobile = response.json()
-            print(f"Step 29: checkmobile API response: {responseMobile}")
+            print(f"Step 31: checkmobile API response: {responseMobile}")
         except Exception as e:
             print(f"Error in checkmobile API for row {i}: {e}")
             time.sleep(5)
@@ -221,7 +215,7 @@ for chunk in pd.read_csv(FileName, chunksize=chunksize):
             try:
                 response = requests.post(url_LP, json=loan_payload, headers=headers)
                 responseLoan = response.json()
-                print(f"Step 30: loanprocess API response: {responseLoan}")
+                print(f"Step 32: loanprocess API response: {responseLoan}")
                 df.at[i, 'LCStatus'] = responseLoan.get("Status", '')
                 df.at[i, 'LCMessage'] = responseLoan.get("Message", '')
                 df.at[i, 'LCReason'] = responseLoan.get("reason", '')
@@ -231,6 +225,9 @@ for chunk in pd.read_csv(FileName, chunksize=chunksize):
 
     batch_file = os.path.join(savelocation, f"{l01}_{batch_number}.csv")
     df.to_csv(batch_file, index=False)
-    print(f"Step 31: Batch {batch_number} saved to {batch_file}.")
+    print(f"Step 33: Batch {batch_number} saved to {batch_file}.")
 
-print("\nStep 32: Batch processing completed.")
+    del df
+    gc.collect()
+
+print("\nStep 34: Batch processing completed.")
