@@ -35,6 +35,7 @@ kk1 = kk + 1
 l00 = 00000
 l01 = l00 + 600000000
 
+print('All Read Done')
 # Define TT-based source and destination folders
 DATA_ROOT = os.path.join(BASE_DIR, 'data')
 data_sources = {
@@ -60,6 +61,8 @@ def calculate_age(birth_date):
     today = datetime.date.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
+print('procssing Done ')
+
 # Processing block
 for hhh in range(kk, kk1):
     DD = str((date.today() - timedelta(days=hhh))).replace("-", "")
@@ -72,7 +75,7 @@ for hhh in range(kk, kk1):
     os.makedirs(os.path.join(savelocation, DD), exist_ok=True)
 
     df = pd.read_csv(FileName)
-
+    print('df read')
     if TT in [2, 3, 4, 5]:
         STATE = pd.read_csv(PINCODE_FILE)[['pincode', 'state_name', 'city']]
         STATE.columns = ['E10', 'city', 'state']
@@ -118,7 +121,7 @@ for hhh in range(kk, kk1):
 
     # Monthly income normalization
     df['Monthly Income'] = df['Monthly Income'].apply(lambda x: min(int(x / 12), 199000) if x >= 500000 else x)
-
+    print('Cleaniung Part 1')
     # Email cleanup and fixes (simplified)
     df['Email ID'] = df['Email ID'].str.lower()
     df['Email ID'] = df['Email ID'].str.replace(r'[^\w\.@]+', '', regex=True)
@@ -149,7 +152,7 @@ for hhh in range(kk, kk1):
     df['LCStatus'] = ''
     df['LCMessage'] = ''
     df['LCReason'] = ''
-
+    print('Cleaning Done')
     for i in range(df.shape[0]):
         print(f"Processing row {i}")
 
