@@ -73,6 +73,10 @@ PARSE_DATES = ["E7"]           # DOB column
 
 # ─────────────────────────────── 4. BATCH LOOP ────────────────────────────────
 batch = 0
+
+proc = psutil.Process(os.getpid())
+print(f"My RAM: {proc.memory_info().rss/1024**2:.1f} MB")
+
 for chunk in pd.read_csv(
         SRC_FILE,
         chunksize       = CHUNK,
