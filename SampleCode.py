@@ -35,6 +35,8 @@ kk1 = kk + 1
 l00 = 00000
 l01 = l00 + 600000000
 
+DD = str((date.today() - timedelta(days=hhh))).replace("-", "")
+
 print('All Read Done')
 # Define TT-based source and destination folders
 DATA_ROOT = os.path.join(BASE_DIR, 'data')
@@ -56,6 +58,11 @@ elif TT == 4:
 print(TT)
 print(DD)
 
+FileName  = data_sources[TT][0] + DD +'.csv'
+savelocation  = data_sources[TT][1] 
+print(FileName)
+print(savelocation)
+
 
 # API URLs and headers
 url = "https://lms.lendingplate.co.in/api/Api/affiliateApi/checkmobile"
@@ -73,14 +80,15 @@ def calculate_age(birth_date):
 
 print('procssing Done ')
 
+
 # Processing block
 for hhh in range(kk, kk1):
-    DD = str((date.today() - timedelta(days=hhh))).replace("-", "")
+    
 
     # Resolve file and save paths
     source_folder, dest_folder = data_sources[TT]
-    FileName = os.path.join(DATA_ROOT, source_folder, f"{DD}.csv")
-    savelocation = os.path.join(DATA_ROOT, dest_folder)
+    # FileName = os.path.join(DATA_ROOT, source_folder, f"{DD}.csv")
+    # savelocation = os.path.join(DATA_ROOT, dest_folder)
 
     os.makedirs(os.path.join(savelocation, DD), exist_ok=True)
 
