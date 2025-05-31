@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Refactored on May 11, 2025
+Refactored on May 31, 2025
 Original Author: Dotpe
-Updated for relative paths and portability
+Updated for batch processing to avoid memory issues.
 """
-
 
 import os
 import pandas as pd
@@ -37,7 +36,6 @@ l01 = l00 + 600000000
 
 DD = str((date.today() - timedelta(days=hhh))).replace("-", "")
 
-print('All Read Done')
 # Define TT-based source and destination folders
 DATA_ROOT = os.path.join(BASE_DIR, 'data')
 data_sources = {
@@ -54,16 +52,10 @@ if TT == 3:
 elif TT == 4:
     NUM  = 90
     DD = f'{NUM}. Batch {NUM}_1'
-    
-print(TT)
-print(DD)
 
-FileName  = data_sources[TT][0] +'/'+ DD +'.csv'
-savelocation  = data_sources[TT][1] 
-
-print(FileName)
-print(savelocation)
-
+FileName = os.path.join(BASE_DIR, data_sources[TT][0], f'{DD}.csv')
+savelocation = os.path.join(BASE_DIR, data_sources[TT][1], DD)
+os.makedirs(savelocation, exist_ok=True)
 
 # API URLs and headers
 url = "https://lms.lendingplate.co.in/api/Api/affiliateApi/checkmobile"
@@ -74,27 +66,31 @@ headers = {
     "Cookie": "ci_session=2imken2lq7l4f1jj7ns4id9rejq9asfm"
 }
 
-# Helper functions
+# Helper function to calculate age
 def calculate_age(birth_date):
     today = datetime.date.today()
     return today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
-print('procssing Done ')
+# Preload DND and Pincode filters
+DND = pd.read_csv(DND_FILE, dtype={'Phone': str})
+DND.columns = ['Phone', 'Flag']
 
+Pincode = pd.read_csv(PINCODE_FILTER_FILE)
+Pincode = Pincode[['pincode']].drop_duplicates()
+Pincode.columns = ['Pincode']
+Pincode['Flag'] = 1
 
-# Processing block
-for hhh in range(kk, kk1):
-    
+# Batch processing
+chunksize = 500
+batch_number = 0
 
-    # Resolve file and save paths
-    source_folder, dest_folder = data_sources[TT]
-    # FileName = os.path.join(DATA_ROOT, source_folder, f"{DD}.csv")
-    # savelocation = os.path.join(DATA_ROOT, dest_folder)
+print("Starting batch processing...")
+for chunk in pd.read_csv(FileName, chunksize=chunksize):
+    batch_number += 1
+    print(f"\nProcessing batch {batch_number}")
 
-    os.makedirs(os.path.join(savelocation, DD), exist_ok=True)
+    df = chunk.copy()
 
-    df = pd.read_csv(FileName)
-    print('df read')
     if TT in [2, 3, 4, 5]:
         STATE = pd.read_csv(PINCODE_FILE)[['pincode', 'state_name', 'city']]
         STATE.columns = ['E10', 'city', 'state']
@@ -121,36 +117,30 @@ for hhh in range(kk, kk1):
     df['Monthly Income'] = df['Monthly Income'].astype(int)
 
     # DND Filter
-    DND = pd.read_csv(DND_FILE, dtype={'Phone': str})
-    DND.columns = ['Phone', 'Flag']
     df['Phone'] = df['Phone'].astype(str)
     df = df.merge(DND, on='Phone', how='left')
     df = df.loc[(df.Flag != 1) & (df.Flag != 0)]
-    df = df[~df['Email ID'].str.contains('india')]
+    df = df[~df['Email ID'].str.contains('india', na=False)]
     df.drop('Flag', axis=1, inplace=True)
 
     # Valid Pincode Filter
-    Pincode = pd.read_csv(PINCODE_FILTER_FILE)
-    Pincode = Pincode[['pincode']].drop_duplicates()
-    Pincode.columns = ['Pincode']
-    Pincode['Flag'] = 1
     df = df.merge(Pincode, on='Pincode', how='left')
     df = df.loc[df['Flag'] == 1]
     df.drop('Flag', axis=1, inplace=True)
 
     # Monthly income normalization
     df['Monthly Income'] = df['Monthly Income'].apply(lambda x: min(int(x / 12), 199000) if x >= 500000 else x)
-    print('Cleaniung Part 1')
-    # Email cleanup and fixes (simplified)
+
+    # Email cleanup
     df['Email ID'] = df['Email ID'].str.lower()
     df['Email ID'] = df['Email ID'].str.replace(r'[^\w\.@]+', '', regex=True)
     df['Email ID'] = df['Email ID'].str.replace(r'gmil|gamil|gmai|gamail|gmial', 'gmail', regex=True)
 
-    # Filter based on employment and income
+    # Filter by employment type and income
     df = df[df['Monthly Income'] >= 20000]
     df = df[df['Employment Type'].str.lower() == 'salaried']
 
-    # Normalize gender
+    # Gender normalization
     df['Gender'] = df['Gender'].replace({'f': 'Female', 'm': 'Male'})
 
     # Age filtering
@@ -159,7 +149,6 @@ for hhh in range(kk, kk1):
     df['Age'] = df['Date Of Birth'].apply(calculate_age)
     df = df[(df['Age'] >= 21) & (df['Age'] <= 58)]
     df['Date Of Birth'] = df['Date Of Birth'].dt.strftime('%d/%m/%Y')
-
     df.drop('Age', axis=1, inplace=True)
 
     # Assign ref_id
@@ -171,9 +160,9 @@ for hhh in range(kk, kk1):
     df['LCStatus'] = ''
     df['LCMessage'] = ''
     df['LCReason'] = ''
-    print('Cleaning Done')
+
     for i in range(df.shape[0]):
-        print(f"Processing row {i}")
+        print(f"Processing row {i} in batch {batch_number}")
 
         data = {
             "mobile": str(df.iloc[i]['Phone'])[:10],
@@ -185,15 +174,14 @@ for hhh in range(kk, kk1):
             response = requests.post(url, json=data, headers=headers)
             responseMobile = response.json()
             print(responseMobile)
-        except:
+        except Exception as e:
+            print(f"Error in checkmobile API: {e}")
             time.sleep(5)
             continue
 
         df.at[i, 'DDStatus'] = responseMobile.get("status", '')
         df.at[i, 'DDMessage'] = responseMobile.get("message", '')
-        
-        print(responseMobile.get("status", ''))
-        
+
         if responseMobile.get("status") == "S":
             loan_payload = {
                 "partner_id": "AADIFINANCE",
@@ -206,9 +194,7 @@ for hhh in range(kk, kk1):
                 "profession": "SAL",
                 "net_mothlyincome": str(df.iloc[i]['Monthly Income'])
             }
-            
-            print(responseLoan.get("Status", ''))
-            
+
             try:
                 response = requests.post(url_LP, json=loan_payload, headers=headers)
                 responseLoan = response.json()
@@ -216,14 +202,13 @@ for hhh in range(kk, kk1):
                 df.at[i, 'LCStatus'] = responseLoan.get("Status", '')
                 df.at[i, 'LCMessage'] = responseLoan.get("Message", '')
                 df.at[i, 'LCReason'] = responseLoan.get("reason", '')
-            except:
+            except Exception as e:
+                print(f"Error in loanprocess API: {e}")
                 time.sleep(5)
 
-        # Save every 500 records
-        if i % 500 == 0:
-            print(os.path.join(savelocation, DD, f"{l01}.csv"))
-            df.to_csv(os.path.join(savelocation, DD, f"{l01}.csv"), index=False)
+    # Save each batch
+    batch_file = os.path.join(savelocation, f"{l01}_{batch_number}.csv")
+    df.to_csv(batch_file, index=False)
+    print(f"Batch {batch_number} saved to {batch_file}")
 
-    # Final save
-    print(os.path.join(savelocation, DD, f"{l01}.csv"))
-    df.to_csv(os.path.join(savelocation, DD, f"{l01}.csv"), index=False)
+print("\nBatch processing completed.")
