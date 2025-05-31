@@ -58,8 +58,9 @@ elif TT == 4:
 print(TT)
 print(DD)
 
-FileName  = data_sources[TT][0] + DD +'.csv'
+FileName  = data_sources[TT][0] +'/'+ DD +'.csv'
 savelocation  = data_sources[TT][1] 
+
 print(FileName)
 print(savelocation)
 
