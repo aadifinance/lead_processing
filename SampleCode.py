@@ -41,12 +41,12 @@ print('All Read Done')
 # Define TT-based source and destination folders
 DATA_ROOT = os.path.join(BASE_DIR, 'data')
 data_sources = {
-    0: ('Data/KreditBee/Data/01. BData', 'LendingPlate/ApprovedData/PS'),
-    1: ('Data/KreditBee/Bulk/No BNPL', 'LendingPlate/ApprovedData/NoBNPL'),
+    0: ('data/KreditBee/Data/01. BData', 'LendingPlate/ApprovedData/PS'),
+    1: ('data/KreditBee/Bulk/No BNPL', 'LendingPlate/ApprovedData/NoBNPL'),
     2: ('MP/Data', 'LendingPlate/ApprovedData/MP'),
-    3: ('Data/KreditBee/Data/0. Shub/shub/Data', 'KreditBee/Data/0. Shub/shub/LendingPlate'),
-    4: ('Data/KreditBee/Data/0. Shub/John/Data', 'KreditBee/Data/0. Shub/Jhon/LendingPlate'),
-    5: ('Data/KreditBee/Data/02. DigitalAdd/Output', 'KreditBee/Data/02. DigitalAdd/Approved Data/LendingPlate'),
+    3: ('data/KreditBee/Data/0. Shub/shub/Data', 'KreditBee/Data/0. Shub/shub/LendingPlate'),
+    4: ('data/KreditBee/Data/0. Shub/John/Data', 'KreditBee/Data/0. Shub/Jhon/LendingPlate'),
+    5: ('data/KreditBee/Data/02. DigitalAdd/Output', 'KreditBee/Data/02. DigitalAdd/Approved Data/LendingPlate'),
 }
 
 if TT == 3:
