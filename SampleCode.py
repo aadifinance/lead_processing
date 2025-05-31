@@ -29,7 +29,7 @@ BBuckets = ['Bucket1.csv', 'Bucket2.csv', 'Bucket3.csv', 'Bucket4.csv', 'Bulk.cs
 BBucketsSlab = [1, 2, 3, 7, 10]
 
 hhh = 0
-TT = 2
+TT = 4
 kk = 0
 kk1 = kk + 1
 l00 = 00000
@@ -46,6 +46,13 @@ data_sources = {
     4: ('KreditBee/Data/0. Shub/John/Data', 'KreditBee/Data/0. Shub/Jhon/LendingPlate'),
     5: ('KreditBee/Data/02. DigitalAdd/Output', 'KreditBee/Data/02. DigitalAdd/Approved Data/LendingPlate'),
 }
+
+if TT == 3:
+    DD  = ''
+elif TT == 4:
+    NUM  = 91
+    DD = f'{NUM}. Batch {NUM}_1'
+    
 
 # API URLs and headers
 url = "https://lms.lendingplate.co.in/api/Api/affiliateApi/checkmobile"
@@ -165,6 +172,7 @@ for hhh in range(kk, kk1):
         try:
             response = requests.post(url, json=data, headers=headers)
             responseMobile = response.json()
+            print(responseMobile)
         except:
             time.sleep(5)
             continue
@@ -188,6 +196,7 @@ for hhh in range(kk, kk1):
             try:
                 response = requests.post(url_LP, json=loan_payload, headers=headers)
                 responseLoan = response.json()
+                print(responseLoan)
                 df.at[i, 'LCStatus'] = responseLoan.get("Status", '')
                 df.at[i, 'LCMessage'] = responseLoan.get("Message", '')
                 df.at[i, 'LCReason'] = responseLoan.get("reason", '')
@@ -196,7 +205,9 @@ for hhh in range(kk, kk1):
 
         # Save every 500 records
         if i % 500 == 0:
+            print(os.path.join(savelocation, DD, f"{l01}.csv"))
             df.to_csv(os.path.join(savelocation, DD, f"{l01}.csv"), index=False)
 
     # Final save
+    print(os.path.join(savelocation, DD, f"{l01}.csv"))
     df.to_csv(os.path.join(savelocation, DD, f"{l01}.csv"), index=False)
