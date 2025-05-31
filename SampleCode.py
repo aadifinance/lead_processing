@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Define supporting file paths
 PINCODE_FILE = os.path.join(BASE_DIR, 'data', 'pincode.csv')
 DND_FILE = os.path.join(BASE_DIR, 'data', 'DND.csv')
-PINCODE_FILTER_FILE = os.path.join(BASE_DIR, 'data', 'Pincode.csv')
+PINCODE_FILTER_FILE = os.path.join(BASE_DIR, 'LendingPlate', 'Pincode.csv')
 
 # Configuration variables
 BBuckets = ['Bucket1.csv', 'Bucket2.csv', 'Bucket3.csv', 'Bucket4.csv', 'Bulk.csv']
