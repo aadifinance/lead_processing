@@ -84,7 +84,7 @@ for chunk in pd.read_csv(
         dtype           = dtype_map,
         parse_dates     = PARSE_DATES,
         dtype_backend   = "pyarrow",        # Arrow strings for all other text columns
-        engine          = "pyarrow",        # Arrow CSV reader (faster & lower-RAM)
+        # engine          = "pyarrow",        # Arrow CSV reader (faster & lower-RAM)
         keep_default_na = False,
         dayfirst        = False):
 
