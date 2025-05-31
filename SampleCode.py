@@ -129,8 +129,9 @@ for chunk in pd.read_csv(SRC_FILE, chunksize=CHUNK):
     if 'Age' in df.columns:
         df = df.drop(columns=['Age'])
 
-    df['AgeYears'] = df['Date Of Birth'].apply(calc_age)
-    df = df[(df['AgeYears']>=21) & (df['AgeYears']<=58)]
+    # df['AgeYears'] = df['Date Of Birth'].apply(calc_age)
+    # df = df[(df['AgeYears']>=21) & (df['AgeYears']<=58)]
+    
     df['Date Of Birth'] = df['Date Of Birth'].dt.strftime('%d/%m/%Y')
 
     # Generate ref_id & placeholder API fields
