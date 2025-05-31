@@ -53,6 +53,9 @@ elif TT == 4:
     NUM  = 91
     DD = f'{NUM}. Batch {NUM}_1'
     
+print(TT)
+print(DD)
+
 
 # API URLs and headers
 url = "https://lms.lendingplate.co.in/api/Api/affiliateApi/checkmobile"
@@ -179,7 +182,9 @@ for hhh in range(kk, kk1):
 
         df.at[i, 'DDStatus'] = responseMobile.get("status", '')
         df.at[i, 'DDMessage'] = responseMobile.get("message", '')
-
+        
+        print(responseMobile.get("status", ''))
+        
         if responseMobile.get("status") == "S":
             loan_payload = {
                 "partner_id": "AADIFINANCE",
@@ -192,7 +197,9 @@ for hhh in range(kk, kk1):
                 "profession": "SAL",
                 "net_mothlyincome": str(df.iloc[i]['Monthly Income'])
             }
-
+            
+            print(responseLoan.get("Status", ''))
+            
             try:
                 response = requests.post(url_LP, json=loan_payload, headers=headers)
                 responseLoan = response.json()
